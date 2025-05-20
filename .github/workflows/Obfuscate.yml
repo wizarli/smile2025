@@ -1,54 +1,56 @@
-name: XQ29
-
-permissions:
-  c: write
+name: Build Obfuscate BPB Panel
 
 on:
-  w: workflow_dispatch:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: write
 
 jobs:
-  xb1:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Xc1
+      - name: Check out the code
         uses: actions/checkout@v4
 
-      - name: Gv2
-        id: g1
-        run: echo "RV=$(jq -r .version package.json)" >> $GITHUB_ENV
-
-      - name: Cv3
-        run: echo "V: $RV"
-
-      - name: Sn4
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          nv: "latest"
+          node-version: "latest"
 
-      - name: Id5
-        run: npm install
-
-      - name: Bp6
-        run: npm run build
-
-      - name: Rr7
-        id: r1
-        shell: bash
+      - name: Install dependencies
         run: |
-          x=$(cat RELEASE.md)
-          x="${x//'%'/'%25'}"
-          x="${x//$'\n'/'%0A'}"
-          x="${x//$'\r'/'%0D'}"
-          echo "RB=$x" >> $GITHUB_OUTPUT
+          npm install -g javascript-obfuscator
+          sudo apt-get install -y unzip
 
-      - name: Ua8
-        uses: svenstaro/upload-release-action@v2
+      - name: Download and extract latest BPB worker
+        run: |
+          wget https://github.com/bia-pain-bache/BPB-Worker-Panel/releases/latest/download/unobfuscated-worker.zip
+          unzip -o unobfuscated-worker.zip
+          mv _worker.js origin.js
+
+      - name: Obfuscate BPB worker js
+        run: |
+          javascript-obfuscator origin.js --output _worker.js \
+          --compact true \
+          --identifier-names-generator hexadecimal \
+          --rename-globals true \
+          --string-array true \
+          --string-array-encoding 'base64' \
+          --string-array-threshold 0.75 \
+          --transform-object-keys true \
+          --self-defending false \
+          --simplify true
+
+      - name: 提交更改
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          rt: ${{ secrets.GITHUB_TOKEN }}
-          f: dist/*
-          t: v${{ env.RV }}
-          rn: Release v${{ env.RV }}
-          o: true
-          fg: true
-          p: true
-          b: ${{ steps.r1.outputs.RB }}
+          branch: main
+          commit_message: ':arrow_up: update latest bpb panel'
+          commit_author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+          push_options: '--set-upstream'
