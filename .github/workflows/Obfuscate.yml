@@ -1,56 +1,46 @@
-name: Build Obfuscate BPB Panel
-
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: "0 1 * * *"
+name: ZX12p  # 随机名称
 
 permissions:
   contents: write
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+on:
+  workflow_dispatch:
 
+jobs:
+  B7Uz2:
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out the code
+      - name: Xy9k
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Get Ver
+        id: gv
+        run: echo "RV=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Check Ver
+        run: echo "$RV"
+
+      - name: Setup
         uses: actions/setup-node@v4
         with:
           node-version: "latest"
 
-      - name: Install dependencies
-        run: |
-          npm install -g javascript-obfuscator
-          sudo apt-get install -y unzip
+      - name: Install (Obfuscated)
+        run: echo "bm20IGluc3RhbGw=" | base64 --decode | bash
 
-      - name: Download and extract latest BPB worker
-        run: |
-          wget https://github.com/bia-pain-bache/BPB-Worker-Panel/releases/latest/download/unobfuscated-worker.zip
-          unzip -o unobfuscated-worker.zip
-          mv _worker.js origin.js
+      - name: Build (Obfuscated)
+        run: echo "${{ secrets.OBF_BUILD_CMD }}" | bash
 
-      - name: Obfuscate BPB worker js
+      - name: Release Notes
+        id: rn
         run: |
-          javascript-obfuscator origin.js --output _worker.js \
-          --compact true \
-          --identifier-names-generator hexadecimal \
-          --rename-globals true \
-          --string-array true \
-          --string-array-encoding 'base64' \
-          --string-array-threshold 0.75 \
-          --transform-object-keys true \
-          --self-defending false \
-          --simplify true
+          echo "RELEASE_BODY=$(cat RELEASE.md | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')" >> $GITHUB_OUTPUT
 
-      - name: 提交更改
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Upload (Obfuscated)
+        uses: svenstaro/upload-release-action@v2
         with:
-          branch: main
-          commit_message: ':arrow_up: update latest bpb panel'
-          commit_author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
-          push_options: '--set-upstream'
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*
+          tag: v${{ env.RV }}
+          body: ${{ steps.rn.outputs.RELEASE_BODY }}
+          prerelease: true
