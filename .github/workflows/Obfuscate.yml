@@ -1,46 +1,54 @@
-name: ZX12p  # 随机名称
+name: XQ29
 
 permissions:
-  contents: write
+  c: write
 
 on:
-  workflow_dispatch:
+  w: workflow_dispatch:
 
 jobs:
-  B7Uz2:
+  xb1:
     runs-on: ubuntu-latest
     steps:
-      - name: Xy9k
+      - name: Xc1
         uses: actions/checkout@v4
 
-      - name: Get Ver
-        id: gv
+      - name: Gv2
+        id: g1
         run: echo "RV=$(jq -r .version package.json)" >> $GITHUB_ENV
 
-      - name: Check Ver
-        run: echo "$RV"
+      - name: Cv3
+        run: echo "V: $RV"
 
-      - name: Setup
+      - name: Sn4
         uses: actions/setup-node@v4
         with:
-          node-version: "latest"
+          nv: "latest"
 
-      - name: Install (Obfuscated)
-        run: echo "bm20IGluc3RhbGw=" | base64 --decode | bash
+      - name: Id5
+        run: npm install
 
-      - name: Build (Obfuscated)
-        run: echo "${{ secrets.OBF_BUILD_CMD }}" | bash
+      - name: Bp6
+        run: npm run build
 
-      - name: Release Notes
-        id: rn
+      - name: Rr7
+        id: r1
+        shell: bash
         run: |
-          echo "RELEASE_BODY=$(cat RELEASE.md | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')" >> $GITHUB_OUTPUT
+          x=$(cat RELEASE.md)
+          x="${x//'%'/'%25'}"
+          x="${x//$'\n'/'%0A'}"
+          x="${x//$'\r'/'%0D'}"
+          echo "RB=$x" >> $GITHUB_OUTPUT
 
-      - name: Upload (Obfuscated)
+      - name: Ua8
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*
-          tag: v${{ env.RV }}
-          body: ${{ steps.rn.outputs.RELEASE_BODY }}
-          prerelease: true
+          rt: ${{ secrets.GITHUB_TOKEN }}
+          f: dist/*
+          t: v${{ env.RV }}
+          rn: Release v${{ env.RV }}
+          o: true
+          fg: true
+          p: true
+          b: ${{ steps.r1.outputs.RB }}
